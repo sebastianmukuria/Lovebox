@@ -1,104 +1,128 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 75" width="60mm" height="75mm">
-  <!-- Lovebox Otter - laser cut design
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" width="50mm" height="60mm">
+  <!-- Kawaii Otter holding heart - laser cut design
+       Style reference: chibi/kawaii with oversized head
        Intended for 3mm birch plywood.
-       The hole at the bottom center is for mounting on the servo horn. -->
+       Servo horn mounting hole at bottom center. -->
 
-  <!-- Otter body outline -->
+  <!-- === BACK LAYER: Tail (behind body) === -->
   <path d="
-    M 20,2
-    Q 16,2 14,5
-    Q 12,8 12,12
-    L 12,14
-    Q 8,14 6,16
-    Q 4,18 4,21
-    Q 4,24 6,26
-    Q 8,28 12,28
-    L 12,30
-    Q 10,32 9,35
-    Q 8,38 8,42
-    L 8,55
-    Q 8,60 12,63
-    Q 14,65 17,66
-    L 17,70
-    Q 17,73 20,74
-    Q 22,75 25,75
-    L 35,75
-    Q 38,75 40,74
-    Q 43,73 43,70
-    L 43,66
-    Q 46,65 48,63
-    Q 52,60 52,55
-    L 52,42
-    Q 52,38 51,35
-    Q 50,32 48,30
-    L 48,28
-    Q 52,28 54,26
-    Q 56,24 56,21
-    Q 56,18 54,16
-    Q 52,14 48,14
-    L 48,12
-    Q 48,8 46,5
-    Q 44,2 40,2
-    Q 37,2 35,4
-    Q 32,6 30,6
-    Q 28,6 25,4
-    Q 23,2 20,2
+    M 68,95
+    Q 75,93 80,88
+    Q 86,82 88,76
+    Q 89,72 87,70
+    Q 85,68 82,70
+    Q 78,73 75,78
+    Q 72,84 68,90
     Z
-  " fill="#8B6914" stroke="#000" stroke-width="0.5"/>
+  " fill="#6B4423" stroke="#3B2210" stroke-width="0.8"/>
 
-  <!-- Inner ears -->
-  <ellipse cx="17" cy="8" rx="3" ry="4" fill="#D2A45E"/>
-  <ellipse cx="43" cy="8" rx="3" ry="4" fill="#D2A45E"/>
+  <!-- === BODY === -->
+  <!-- Main body (small, chibi proportion) -->
+  <ellipse cx="50" cy="90" rx="22" ry="22" fill="#7B5B3A" stroke="#3B2210" stroke-width="0.8"/>
 
-  <!-- Face/muzzle area -->
-  <ellipse cx="30" cy="22" rx="12" ry="9" fill="#D2B48C"/>
-
-  <!-- Eyes -->
-  <circle cx="23" cy="18" r="2.5" fill="#000"/>
-  <circle cx="37" cy="18" r="2.5" fill="#000"/>
-  <circle cx="24" cy="17" r="0.8" fill="#fff"/>
-  <circle cx="38" cy="17" r="0.8" fill="#fff"/>
-
-  <!-- Nose -->
-  <ellipse cx="30" cy="22" rx="3" ry="2" fill="#333"/>
-
-  <!-- Mouth -->
-  <path d="M 28,24 Q 30,26 32,24" fill="none" stroke="#333" stroke-width="0.5"/>
-
-  <!-- Whiskers -->
-  <line x1="20" y1="22" x2="13" y2="20" stroke="#333" stroke-width="0.3"/>
-  <line x1="20" y1="23" x2="13" y2="23" stroke="#333" stroke-width="0.3"/>
-  <line x1="40" y1="22" x2="47" y2="20" stroke="#333" stroke-width="0.3"/>
-  <line x1="40" y1="23" x2="47" y2="23" stroke="#333" stroke-width="0.3"/>
-
-  <!-- Belly -->
-  <ellipse cx="30" cy="50" rx="14" ry="16" fill="#D2B48C"/>
-
-  <!-- Arms holding heart -->
-  <path d="M 12,35 Q 10,38 14,42 L 20,44" fill="#8B6914" stroke="#000" stroke-width="0.5"/>
-  <path d="M 48,35 Q 50,38 46,42 L 40,44" fill="#8B6914" stroke="#000" stroke-width="0.5"/>
-
-  <!-- Heart -->
-  <path d="
-    M 30,38
-    Q 30,34 25,34
-    Q 20,34 20,39
-    Q 20,44 30,50
-    Q 40,44 40,39
-    Q 40,34 35,34
-    Q 30,34 30,38
-    Z
-  " fill="#E31C23" stroke="#000" stroke-width="0.5"/>
-
-  <!-- Paws (little bumps at the bottom of arms) -->
-  <circle cx="20" cy="44" r="2" fill="#8B6914" stroke="#000" stroke-width="0.3"/>
-  <circle cx="40" cy="44" r="2" fill="#8B6914" stroke="#000" stroke-width="0.3"/>
+  <!-- Belly patch -->
+  <ellipse cx="50" cy="92" rx="15" ry="16" fill="#D4B896"/>
 
   <!-- Feet -->
-  <ellipse cx="22" cy="73" rx="5" ry="2.5" fill="#8B6914" stroke="#000" stroke-width="0.5"/>
-  <ellipse cx="38" cy="73" rx="5" ry="2.5" fill="#8B6914" stroke="#000" stroke-width="0.5"/>
+  <ellipse cx="38" cy="108" rx="8" ry="4" fill="#6B4423" stroke="#3B2210" stroke-width="0.8"/>
+  <ellipse cx="62" cy="108" rx="8" ry="4" fill="#6B4423" stroke="#3B2210" stroke-width="0.8"/>
 
-  <!-- Servo horn mounting hole (center bottom) -->
-  <circle cx="30" cy="68" r="1.5" fill="#fff" stroke="#000" stroke-width="0.3"/>
+  <!-- === LEFT ARM (behind heart) === -->
+  <path d="
+    M 30,78
+    Q 26,82 28,88
+    Q 29,91 33,92
+    L 38,88
+    Q 34,84 33,78
+    Z
+  " fill="#7B5B3A" stroke="#3B2210" stroke-width="0.8"/>
+
+  <!-- === RIGHT ARM (behind heart) === -->
+  <path d="
+    M 70,78
+    Q 74,82 72,88
+    Q 71,91 67,92
+    L 62,88
+    Q 66,84 67,78
+    Z
+  " fill="#7B5B3A" stroke="#3B2210" stroke-width="0.8"/>
+
+  <!-- === HEART === -->
+  <path d="
+    M 50,78
+    C 50,72 42,66 35,72
+    C 28,78 30,88 50,98
+    C 70,88 72,78 65,72
+    C 58,66 50,72 50,78
+    Z
+  " fill="#E84B5C" stroke="#C13040" stroke-width="0.8"/>
+  <!-- Heart shine -->
+  <ellipse cx="42" cy="74" rx="3" ry="2" fill="#F08090" opacity="0.6" transform="rotate(-20,42,74)"/>
+
+  <!-- === HEAD (oversized, kawaii proportion) === -->
+  <!-- Main head shape -->
+  <ellipse cx="50" cy="36" rx="32" ry="30" fill="#7B5B3A" stroke="#3B2210" stroke-width="0.8"/>
+
+  <!-- Hair tuft on top -->
+  <path d="
+    M 46,7
+    Q 48,3 50,6
+    Q 52,2 54,7
+    Q 53,4 50,5
+    Q 47,4 46,7
+    Z
+  " fill="#6B4423" stroke="#3B2210" stroke-width="0.5"/>
+
+  <!-- Left ear -->
+  <ellipse cx="24" cy="18" rx="8" ry="7" fill="#7B5B3A" stroke="#3B2210" stroke-width="0.8"/>
+  <ellipse cx="24" cy="18" rx="5" ry="4.5" fill="#C4956A"/>
+
+  <!-- Right ear -->
+  <ellipse cx="76" cy="18" rx="8" ry="7" fill="#7B5B3A" stroke="#3B2210" stroke-width="0.8"/>
+  <ellipse cx="76" cy="18" rx="5" ry="4.5" fill="#C4956A"/>
+
+  <!-- Face patch (lighter muzzle area) -->
+  <path d="
+    M 30,35
+    Q 30,28 38,25
+    Q 44,23 50,23
+    Q 56,23 62,25
+    Q 70,28 70,35
+    Q 70,48 60,52
+    Q 55,54 50,54
+    Q 45,54 40,52
+    Q 30,48 30,35
+    Z
+  " fill="#E8D5B8"/>
+
+  <!-- Left eye -->
+  <ellipse cx="38" cy="34" rx="5.5" ry="6" fill="#1A1A1A"/>
+  <ellipse cx="40" cy="32" rx="2" ry="2.2" fill="#fff"/>
+  <circle cx="37" cy="36" r="0.8" fill="#fff"/>
+
+  <!-- Right eye -->
+  <ellipse cx="62" cy="34" rx="5.5" ry="6" fill="#1A1A1A"/>
+  <ellipse cx="64" cy="32" rx="2" ry="2.2" fill="#fff"/>
+  <circle cx="61" cy="36" r="0.8" fill="#fff"/>
+
+  <!-- Blush (rosy cheeks) -->
+  <ellipse cx="28" cy="40" rx="4" ry="2.5" fill="#E8929A" opacity="0.5"/>
+  <ellipse cx="72" cy="40" rx="4" ry="2.5" fill="#E8929A" opacity="0.5"/>
+
+  <!-- Nose -->
+  <ellipse cx="50" cy="41" rx="3" ry="2.2" fill="#3B2210"/>
+
+  <!-- Mouth -->
+  <path d="M 47,44 Q 50,47 53,44" fill="none" stroke="#3B2210" stroke-width="0.8" stroke-linecap="round"/>
+
+  <!-- === PAWS (on top of heart) === -->
+  <!-- Left paw -->
+  <ellipse cx="38" cy="82" rx="4" ry="3" fill="#7B5B3A" stroke="#3B2210" stroke-width="0.5"/>
+  <!-- Right paw -->
+  <ellipse cx="62" cy="82" rx="4" ry="3" fill="#7B5B3A" stroke="#3B2210" stroke-width="0.5"/>
+
+  <!-- === SERVO MOUNTING === -->
+  <!-- Servo horn hole (center, behind body) -->
+  <circle cx="50" cy="100" r="1.5" fill="#fff" stroke="#3B2210" stroke-width="0.4"/>
 </svg>
