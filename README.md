@@ -1,54 +1,151 @@
 ❤️ Lovebox ❤️
 ===
-DIY project to lasercut a lovebox inspired from https://en.lovebox.love/. It was a homemade Christmas present for my mom. So I can send her messages or pictures at any time to start the day motivated. When a new message is received, the heart moves in front of the box. It stops as soon as the message has been read (more specifically the built-in brightness sensor reacts when the box is opened). Have fun building your own!
+
+DIY project to lasercut a lovebox inspired from https://en.lovebox.love/. Send messages or pictures from your phone via Telegram -- when a new message arrives, the heart spins on the front of the box. It stops when the box is opened (detected by a built-in light sensor). Have fun building your own!
+
+This is a modernized fork of [julisa99/Lovebox](https://github.com/julisa99/Lovebox), updated for current hardware and tooling (ESP32, PlatformIO, Telegram Bot, WiFiManager).
 
 ![](https://github.com/julisa99/Lovebox/blob/master/docs/images/demo_lovebox.gif)
 
+## What changed from the original
+
+| Area | Original (2018) | This fork |
+|---|---|---|
+| Microcontroller | ESP8266 (WeMos D1 Mini) | **ESP32** (WEMOS D1 Mini32 or any ESP32 devkit) |
+| Build system | Arduino IDE (manual library install) | **PlatformIO** (pinned deps, one-command build) |
+| Message backend | GitHub Gist (manual editing, 60s polling) | **Telegram Bot** (send from your phone, 10s polling) |
+| WiFi setup | Hardcoded in `credentials.h` | **WiFiManager** captive portal (phone-based setup) |
+| TLS | SHA-1 fingerprint pinning (broken/expired) | **CA root certificate** (valid until 2038) |
+| Storage | EEPROM (no wear leveling) | **NVS Preferences** (wear-leveled flash) |
+
 ## Materials
-1. [3mm](https://www.amazon.de/dp/B0002FQKX4) or [4mm wood](https://www.amazon.de/dp/B06Y48L765)(to cut the case + heart)
-2. [WeMos D1 Mini](https://www.amazon.de/dp/B01N9RXGHY) 
+
+1. [3mm](https://www.amazon.de/dp/B0002FQKX4) or [4mm wood](https://www.amazon.de/dp/B06Y48L765) (to cut the case + heart)
+2. **ESP32 dev board** -- any ESP32 DevKit or WEMOS D1 Mini32 (~$3-5)
 3. [Servo motor](https://www.amazon.de/dp/B07236KYVC)
 4. [Light sensor](https://www.amazon.de/dp/B00SWO73DS)
 5. [10kΩ resistor](https://www.amazon.de/dp/B072BHDBDG)
-6. [OLED display](https://www.amazon.de/dp/B074NJMPYJ)
+6. [OLED display](https://www.amazon.de/dp/B074NJMPYJ) (SSD1306 128x64, I2C)
 7. [Perfboard](https://www.amazon.de/dp/B00VL1KHJQ)
 8. [Breakaway PCB Connector](https://www.amazon.de/dp/B01M69EA9O)
 9. [1mm acryl](https://www.amazon.de/dp/B07T4JSXYR) (to cut the display)
 10. [Darkening foil/dazzle strip](https://www.amazon.de/dp/B001CC6VYO)
 
-## Composition 
-Below you can see where the OLED display, the light sensor with resistor and the servo motor are connected to the WeMos D1 Mini. The second photo is the soldered assembly. As you can see the micro-USB connector of the microcotroller board is at the ground. On top of the microcontroller a perfboard is soldered. Now the servo motor is added and also soldered to the perfboard. Notice the resistor and the light sensor that are also soldered to the board, with the light sensor pointing up. The display is soldered to another perfboard. The board provides a flat surface to hold the display in place. It is put on the motor and is connected to the other perfboard by using a Breakaway PCB Connector. It serves as a spacer to hold the other board above the motor.
+## Wiring (ESP32)
+
+| Component | ESP32 Pin |
+|---|---|
+| OLED SDA | GPIO 21 |
+| OLED SCL | GPIO 22 |
+| Servo signal | GPIO 13 |
+| Light sensor | GPIO 34 (ADC1) |
+
+> **Note:** On ESP32, ADC2 pins (GPIOs 0, 2, 4, 12-15, 25-27) cannot be used while WiFi is active. The light sensor must be on an ADC1 pin (GPIO 32-39). GPIO 34 is used here.
+
+All pin assignments can be changed in `include/config.h`.
+
+## Assembly
+
+Below you can see where the OLED display, the light sensor with resistor and the servo motor are connected to the microcontroller. The second photo is the soldered assembly. The micro-USB connector of the microcontroller board is at the ground. On top of the microcontroller a perfboard is soldered. The servo motor is added and also soldered to the perfboard. Notice the resistor and the light sensor that are also soldered to the board, with the light sensor pointing up. The display is soldered to another perfboard which provides a flat surface to hold the display in place. It is connected to the other perfboard by using a Breakaway PCB Connector as a spacer above the motor.
 
 ![](https://github.com/julisa99/Lovebox/blob/master/docs/images/composition.JPG)
 
-After finishing the electronics, you have to cut the case, cap and hearts out of the wood and the display out of the 1mm acryl with a lasercutter. For that [four SVGs are provided](https://github.com/julisa99/Lovebox/tree/master/lasercut_files) containing the cutting plan. Then you have to glue the little heart on the larger heart and paint it red. After that, you have to cut with scissors the size of the display out of the darkening foil and put it on the acryl display. Finally, stuck the white servo horn into the back of the heart. The last step is to assemble the case and the cap. Now you can put the hardware inside the case and program the microcontroller.
+After finishing the electronics, cut the case, cap and hearts out of the wood and the display out of the 1mm acryl with a lasercutter. [Four SVGs are provided](https://github.com/julisa99/Lovebox/tree/master/lasercut_files) containing the cutting plan. Glue the little heart on the larger heart and paint it red. Cut the size of the display out of the darkening foil and put it on the acryl display. Stick the white servo horn into the back of the heart. Assemble the case and cap, put the hardware inside, and you're ready to program.
 
 ![](https://github.com/julisa99/Lovebox/blob/master/docs/images/heart.jpg)
 
+## Setup
+
+### 1. Create a Telegram Bot
+
+1. Open Telegram on your phone
+2. Search for **@BotFather** and start a conversation
+3. Send `/newbot`
+4. Follow the prompts -- choose a name and username for your bot
+5. BotFather will give you a **token** like `123456789:ABCdefGHIjklMNO...`
+6. Copy this token -- you'll need it in step 3
+
+### 2. Install PlatformIO
+
+Install [PlatformIO CLI](https://platformio.org/install/cli) or the [VS Code extension](https://platformio.org/install/ide?install=vscode).
+
+With pip:
+```
+pip install platformio
+```
+
+### 3. Configure and flash
+
+1. Clone this repo:
+   ```
+   git clone https://github.com/sebastianmukuria/Lovebox.git
+   cd Lovebox
+   ```
+
+2. Open `include/config.h` and paste your Telegram bot token:
+   ```c
+   #define TELEGRAM_BOT_TOKEN "123456789:ABCdefGHIjklMNO..."
+   ```
+
+3. Adjust pin numbers in `config.h` if your wiring differs from the table above.
+
+4. Connect your ESP32 via USB and flash:
+   ```
+   pio run --target upload
+   ```
+
+5. Open the serial monitor to see status messages:
+   ```
+   pio device monitor
+   ```
+
+### 4. Connect to WiFi
+
+On first boot, the Lovebox creates a WiFi network called **"Lovebox-Setup"**. Connect to it with your phone -- a captive portal will open where you select your home WiFi and enter the password. The credentials are saved and the box will auto-connect on future boots.
+
+To reset WiFi settings, erase the ESP32's flash:
+```
+pio run --target erase
+```
+
+### 5. Send a message
+
+Open Telegram and send a text message to your bot. Within 10 seconds, the Lovebox will display it and start spinning the heart. Open the box (letting light hit the sensor) to mark it as read.
+
 ## How it works
 
-For programming I used the [Arduino IDE](https://www.arduino.cc/en/Main/Software). The cool thing about the Wemos D1 Mini is the built in ESP8266, so you can connect to the internet. Messages like pictures and texts can be sent to the Lovebox via the internet. In order to control the ESP8266, the following address must be added in the Arduino IDE under "File->Preferences->Additional Board Manager URLs": http://arduino.esp8266.com/stable/package_esp8266com_index.json. Then you can type "esp8266" in the search field under "Tools->Board->Boards Manager" and click on "Install". Now the WeMos D1 Mini appears under the boards and can be selected.
+The ESP32 polls the [Telegram Bot API](https://core.telegram.org/bots/api) every 10 seconds using `getUpdates`. When a new message is found:
 
-Then you can open the ["Lovebox.ino"](https://github.com/julisa99/Lovebox/blob/master/Lovebox.ino) and upload it to the board, just connect it to your computer with a micro usb cable. You should first enter your WLAN, password and the path to your gist file (without the part "https://gist.github.com" and add "/raw/yourFilename" behind) in the ["credentials.h"](https://github.com/julisa99/Lovebox/blob/master/credentials.h). The gist file is a text document, which you create online as "private" and then almost always leave your message there, which the microcontroller can then retrieve.
+1. The message text is displayed on the OLED
+2. The message and its ID are saved to NVS (non-volatile storage) so they survive reboots
+3. The servo starts spinning the heart
+4. The light sensor watches for the box to be opened (analog reading > threshold)
+5. When opened, the heart stops and the box returns to polling mode
 
-The microcontroller will then always call your text document on gist.github and see if the first number in the first line is a different one. This serves as an identifier to determine if a new message is retrievable.
-If this is different from the previous one, then the algorithm looks into the second line, if it contains a "t", then the microcontroller expects a text and shows the message on the display. If there is another character, e.g. a "b", then an image is expected. For the picture I use the website: https://www.dcode.fr/binary-image. There you can upload your black and white image and set the target width to 128 pixels. The image will then be converted to "0" and "1" only, so each black pixel becomes a 0 and each white pixel a 1. You can then simply enter this string in the third line of your text document on gist.github. So your text document could look like this:
+## Project structure
 
-![](https://github.com/julisa99/Lovebox/blob/master/docs/images/gist-textdocument.PNG)
+```
+Lovebox/
+├── platformio.ini       # Build config, board, library dependencies
+├── include/
+│   └── config.h         # All tunable settings (pins, token, thresholds)
+├── src/
+│   └── main.cpp         # Firmware source
+├── Lovebox.ino          # Original ESP8266 firmware (reference only)
+├── credentials.h        # Original credentials file (reference only)
+├── lasercut_files/      # SVGs for laser cutting the case
+├── message_examples/    # Example images for the display
+└── docs/                # Photos and documentation
+```
 
 ## Acknowledgements
 
-Thanks to [@blblblu](https://github.com/blblblu/) for the idea of hosting the message content for free on GitHub Gist and [Deus](https://github.com/Daniel-Amadeus/) for helping me with my first lasercut attempts.
+This fork builds on the original [Lovebox](https://github.com/julisa99/Lovebox) by [@julisa99](https://github.com/julisa99).
 
-[Marcel](https://github.com/marcelstoer/) (co-founder of ThingPulse, which provides the open-source display driver used in the project) was one of the first, who [wrote about my project and added more photos of the soldering](https://frightanic.com/iot/the-lovebox-a-gift-from-a-maker/). He made suggestions for improvement there, which I integrated.
+Thanks to [@blblblu](https://github.com/blblblu/) for the idea of hosting the message content for free on GitHub Gist and [Deus](https://github.com/Daniel-Amadeus/) for helping with the first lasercut attempts.
 
-Thanks to [@Nounnours](https://github.com/Nounnours/) who found out the reason for the display error with binary images and was able to solve it. I have also included this solution. 
+[Marcel](https://github.com/marcelstoer/) (co-founder of ThingPulse, which provides the open-source display driver used in the project) was one of the first who [wrote about the project and added more photos of the soldering](https://frightanic.com/iot/the-lovebox-a-gift-from-a-maker/).
 
-I am very excited that so many of you have already been able to build your own Lovebox with my instruction and that you are sending me messages, photos and videos of it. I want to especially share two versions. Bartha Zoltán has integrated the Lovebox into a hexagonal shape and Fabian Weller has designed the Lovebox for Nelly with small shiny silver and red hearts.
+Thanks to [@Nounnours](https://github.com/Nounnours/) who found and fixed the display error with binary images.
 
-![](https://user-images.githubusercontent.com/8758907/116134112-d2340e00-a6cf-11eb-9076-082b64c76a75.png)
-
-Feel also free to check out [Julian's fork using the Arduino Nano 33 IoT](https://github.com/JulianBeaulieu/DIY-LoveBox).
-
-
-###### tags: `Lovebox` `Instruction`
+###### tags: `Lovebox` `ESP32` `Telegram` `PlatformIO`
