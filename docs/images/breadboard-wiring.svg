@@ -28,7 +28,8 @@
 
   <!-- Title -->
   <text x="470" y="30" text-anchor="middle" class="title">LOVEBOX BREADBOARD WIRING DIAGRAM</text>
-  <text x="470" y="48" text-anchor="middle" class="subtitle">ELEGOO ESP32 DevKit · 830-Point Breadboard · USB Port Facing Up</text>
+  <text x="470" y="48" text-anchor="middle" class="subtitle">ELEGOO ESP32 DevKit V1 (30-pin, USB-C) · 830-Point Breadboard · USB Port Facing Up</text>
+  <text x="470" y="63" text-anchor="middle" font-size="10" fill="#888" font-family="Consolas, Monaco, 'Courier New', monospace">NOTE: If your first pin (3V3) is at row 2 instead of row 3, shift all row numbers down by 1</text>
 
   <!-- ============================================================ -->
   <!-- BREADBOARD -->
