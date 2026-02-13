@@ -295,7 +295,7 @@
   <!-- ESP32 DEVKIT (rows 3-17, columns e-f, straddling center) -->
   <!-- Board body covers columns b-h (only col a + col i, OR col b + col j accessible!) -->
   <!-- ============================================================ -->
-  <rect x="200" y="150" width="540" height="365" fill="#1a1a2e" rx="6" stroke="#333" stroke-width="2"/>
+  <rect x="205" y="150" width="505" height="365" fill="#1a1a2e" rx="6" stroke="#333" stroke-width="2"/>
   <!-- Blocked columns indicator -->
   <text x="215" y="520" text-anchor="middle" font-size="7" fill="#ff4444" transform="rotate(-90,215,520)">BLOCKED (b,c,d)</text>
   <text x="725" y="520" text-anchor="middle" font-size="7" fill="#ff4444" transform="rotate(90,725,520)">BLOCKED (g,h)</text>
