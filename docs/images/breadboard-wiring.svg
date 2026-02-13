@@ -293,8 +293,12 @@
 
   <!-- ============================================================ -->
   <!-- ESP32 DEVKIT (rows 3-17, columns e-f, straddling center) -->
+  <!-- Board body covers columns c-h (only a/b and i/j are accessible!) -->
   <!-- ============================================================ -->
-  <rect x="275" y="150" width="390" height="365" fill="#1a1a2e" rx="6" stroke="#333" stroke-width="2"/>
+  <rect x="225" y="150" width="490" height="365" fill="#1a1a2e" rx="6" stroke="#333" stroke-width="2"/>
+  <!-- Blocked columns indicator -->
+  <text x="250" y="520" text-anchor="middle" font-size="7" fill="#ff4444" transform="rotate(-90,250,520)">BLOCKED (c,d)</text>
+  <text x="690" y="520" text-anchor="middle" font-size="7" fill="#ff4444" transform="rotate(90,690,520)">BLOCKED (g,h)</text>
   <!-- USB port -->
   <rect x="420" y="142" width="100" height="20" fill="#888" rx="3" stroke="#666" stroke-width="1"/>
   <text x="470" y="157" text-anchor="middle" font-size="8" fill="#fff">USB</text>
@@ -385,10 +389,11 @@
   <!-- WIRES - STEP 1: POWER RAILS -->
   <!-- ============================================================ -->
 
-  <!-- Wire: ESP32 3V3 (row 3, col d:260) → left red power rail -->
-  <path d="M 260 163 L 210 163 L 210 139 L 108 139" class="wire-red" stroke-width="3.5"/>
-  <!-- Wire: ESP32 GND (row 4, col d:260) → left blue power rail -->
-  <path d="M 260 187 L 235 187 L 235 163 L 165 163 L 165 139 L 135 139" class="wire-black" stroke-width="3.5"/>
+  <!-- Wire: ESP32 3V3 (row 3, col a:185) → left red power rail -->
+  <!-- Use col a or b — cols c,d are blocked by ESP32 board body! -->
+  <path d="M 185 163 L 155 163 L 155 139 L 108 139" class="wire-red" stroke-width="3.5"/>
+  <!-- Wire: ESP32 GND (row 4, col b:210) → left blue power rail -->
+  <path d="M 210 187 L 175 187 L 175 139 L 135 139" class="wire-black" stroke-width="3.5"/>
 
   <!-- Step 1 marker -->
   <circle cx="50" cy="151" r="14" class="step-circle"/>
@@ -422,10 +427,11 @@
   <path d="M 185 595 L 165 595 L 165 595 L 135 595" class="wire-black" stroke-width="2.5"/>
   <!-- OLED VCC (row 22, col b:210) → left 3.3V rail -->
   <path d="M 210 619 L 175 619 L 175 619 L 108 619" class="wire-red" stroke-width="2.5"/>
-  <!-- OLED SCL (row 23, col c:235) → ESP32 D22 (row 16, col d:260) -->
-  <path d="M 235 643 L 170 643 L 170 475 L 260 475" class="wire-green" stroke-width="3"/>
-  <!-- OLED SDA (row 24, col d:260) → ESP32 D21 (row 13, col d:260) -->
-  <path d="M 260 667 L 163 667 L 163 403 L 260 403" class="wire-blue" stroke-width="3"/>
+  <!-- OLED SCL (row 23, col c:235) → ESP32 D22 (row 16, col a:185) -->
+  <!-- Wire runs from OLED down to row 16 col a (accessible!) -->
+  <path d="M 235 643 L 170 643 L 170 475 L 185 475" class="wire-green" stroke-width="3"/>
+  <!-- OLED SDA (row 24, col d:260) → ESP32 D21 (row 13, col b:210) -->
+  <path d="M 260 667 L 163 667 L 163 403 L 210 403" class="wire-blue" stroke-width="3"/>
 
   <!-- Step 2 marker -->
   <circle cx="50" cy="625" r="14" class="step-circle"/>
@@ -435,8 +441,8 @@
   <!-- Wire labels near OLED -->
   <text x="155" y="592" font-size="8" fill="#222" font-weight="bold">GND</text>
   <text x="97" y="616" font-size="8" fill="#cc3333" font-weight="bold">3.3V</text>
-  <text x="155" y="472" font-size="8" fill="#22aa44" font-weight="bold">SCL → D22</text>
-  <text x="148" y="400" font-size="8" fill="#2277ee" font-weight="bold">SDA → D21</text>
+  <text x="155" y="472" font-size="8" fill="#22aa44" font-weight="bold">SCL → D22 col a</text>
+  <text x="140" y="400" font-size="8" fill="#2277ee" font-weight="bold">SDA → D21 col b</text>
 
   <!-- ============================================================ -->
   <!-- WIRES - STEP 3: SERVO MOTOR -->
@@ -454,10 +460,10 @@
   <!-- Brown/GND wire → right GND rail -->
   <path d="M 870 255 L 860 255 L 860 211 L 835 211" class="wire-black" stroke-width="3"/>
   <text x="868" y="262" text-anchor="end" font-size="8" fill="#666">brown</text>
-  <!-- Red/5V wire → ESP32 VIN (row 3, col g:680) -->
+  <!-- Red/5V wire → ESP32 VIN (row 3, col j:755) -->
   <path d="M 870 235 L 850 235 L 850 163 L 755 163" class="wire-darkred" stroke-width="3"/>
   <text x="868" y="242" text-anchor="end" font-size="8" fill="#aa0000">red (5V)</text>
-  <!-- Orange/Signal wire → ESP32 D13 (row 5, col g:680) -->
+  <!-- Orange/Signal wire → ESP32 D13 (row 5, col j:755) -->
   <path d="M 870 215 L 840 215 L 840 211 L 755 211" class="wire-orange" stroke-width="3"/>
   <text x="868" y="222" text-anchor="end" font-size="8" fill="#ee8800">orange</text>
 
@@ -467,11 +473,11 @@
   <text x="897" y="130" text-anchor="middle" font-size="8" fill="#ff6600" font-weight="bold">Servo</text>
 
   <!-- Servo wire labels near breadboard -->
-  <text x="770" y="158" font-size="8" fill="#aa0000" font-weight="bold">VIN (5V)</text>
-  <text x="770" y="208" font-size="8" fill="#ee8800" font-weight="bold">D13 signal</text>
+  <text x="770" y="158" font-size="8" fill="#aa0000" font-weight="bold">VIN col j</text>
+  <text x="770" y="208" font-size="8" fill="#ee8800" font-weight="bold">D13 col j</text>
   <text x="845" y="225" font-size="8" fill="#222" font-weight="bold">GND</text>
 
-  <!-- Connect right GND rail to ESP32 GND -->
+  <!-- Connect right GND rail to ESP32 GND (row 4, col j:755) -->
   <path d="M 835 187 L 755 187" class="wire-black" stroke-width="2.5"/>
 
   <!-- ============================================================ -->
@@ -510,9 +516,10 @@
   <path d="M 835 763 L 755 763" class="wire-black" stroke-width="2.5"/>
   <text x="810" y="760" font-size="8" fill="#222" font-weight="bold">GND</text>
 
-  <!-- Junction → GPIO 34 (row 14, col j:755) via wire -->
+  <!-- Junction → GPIO 34 (row 14, col i:730) via wire -->
+  <!-- Uses col i which is accessible (cols g,h blocked by ESP32) -->
   <path d="M 730 715 L 758 715 L 758 427 L 730 427" class="wire-purple" stroke-width="3"/>
-  <text x="764" y="570" font-size="9" fill="#9944cc" font-weight="bold" transform="rotate(90, 764, 570)">→ D34 (GPIO 34)</text>
+  <text x="764" y="570" font-size="9" fill="#9944cc" font-weight="bold" transform="rotate(90, 764, 570)">→ D34 col i</text>
 
   <!-- Step 4 marker -->
   <circle cx="897" cy="700" r="14" class="step-circle"/>
