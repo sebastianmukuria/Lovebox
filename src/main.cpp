@@ -23,32 +23,10 @@
 
 #include "config.h"
 
-// --- Telegram API root CA certificate (DigiCert Global Root G2) ---
-// This is the root CA that signs api.telegram.org's TLS certificate.
-// Root CAs last ~20 years (expires 2038), unlike leaf certs which rotate
-// every few months. This is why fingerprint pinning broke the original.
-static const char telegram_root_ca[] PROGMEM = R"EOF(
------BEGIN CERTIFICATE-----
-MIIDjjCCAnagAwIBAgIQAzrx5qcRqaC7KGSxHQn65TANBgkqhkiG9w0BAQsFADBh
-MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
-d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBH
-MjAeFw0xMzA4MDExMjAwMDBaFw0zODAxMTUxMjAwMDBaMGExCzAJBgNVBAYTAlVT
-MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j
-b20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IEcyMIIBIjANBgkqhkiG
-9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuzfNNNx7a8myaJCtSnX/RrohCgiN9RlUyfuI
-2/Ou8jqJkTx65qsGGmvPrC3oXgkkRLpimn7Wo6h+4FR1IAWsULecYxpsMNzaHxmx
-1x7e/dfgy5SDN67sH0NO3Xss0r0upS/kqbitOtSZpLYl6ZtrAGCSYP9PIUkY92eQ
-q2EGnI/yuum06ZIya7XzV+hdG82MHauVBJVJ8zUtluNJbd134/tJS7SsVQepj5Wzt
-CO7TG1F8PapspUwtP1MVYwnSlcUfIKdzXOS0xZKBgyMUNGPHgm+F6HmIcr9g+UQv
-IOlCsRnKPZzFBQ9RnbDhxSJITRNrw9FDKZJobq7nMWxM4MphQIDAQABo0IwQMDAPgNV
-HRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwIBhjAdBgNVHQ4EFgQUTiJUIBiV5uNu
-5g/6+rkS7QYXjzkwDQYJKoZIhvcNAQELBQADggEBAGBnKJRvDkhj+zHhTRUcYIrB
-0SMng0eJ0EQu9PQjkqHaBqFG0OH37bC64An+H/YCDRGo6PdRgNqhg7iNqFEe6pJF
-xMcPQJkNFNb3k3it4FTzpEGtCAP0YFaKSWZMAKdqoGsXPPe8pPP0GOtpp1b5oTS3
-3FWLQWyaFLOBhIYLA9UDhEJjJBMPEDkqEPaVdUae+aCaqFME7BbCM0FHPVPDQ7kw
-ak4CRx0kZFJhJQ/OgjFDGHGF4m+7MjM/BfpC+JMPQINbbydhAAAA
------END CERTIFICATE-----
-)EOF";
+// --- TLS Configuration ---
+// Using setInsecure() to skip certificate verification for now.
+// This is acceptable for a personal IoT project on a home network.
+// TODO: Add proper CA root certificate for production use.
 
 // --- Global objects ---
 SSD1306Wire oled(OLED_ADDR, PIN_SDA, PIN_SCL);
@@ -137,7 +115,7 @@ void parkServo() {
 
 bool checkTelegram() {
   WiFiClientSecure client;
-  client.setCACert(telegram_root_ca);
+  client.setInsecure();
 
   HTTPClient https;
   String apiUrl = "https://api.telegram.org/bot" + String(TELEGRAM_BOT_TOKEN)
