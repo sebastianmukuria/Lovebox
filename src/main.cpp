@@ -19,6 +19,7 @@
 #include <ESP32Servo.h>
 #include <WiFiManager.h>
 #include <ArduinoJson.h>
+#include <Wire.h>
 #include "SSD1306Wire.h"
 
 #include "config.h"
@@ -197,6 +198,26 @@ bool checkTelegram() {
 void setup() {
   Serial.begin(115200);
   Serial.println("\n[Lovebox] Starting...");
+
+  // --- I2C Scanner (diagnostic) ---
+  // Scans all I2C addresses to find connected devices.
+  // Remove this block once the OLED address is confirmed working.
+  Wire.begin(PIN_SDA, PIN_SCL);
+  Serial.println("[I2C] Scanning for devices...");
+  int devicesFound = 0;
+  for (byte addr = 1; addr < 127; addr++) {
+    Wire.beginTransmission(addr);
+    byte error = Wire.endTransmission();
+    if (error == 0) {
+      Serial.printf("[I2C] Device found at 0x%02X\n", addr);
+      devicesFound++;
+    }
+  }
+  if (devicesFound == 0) {
+    Serial.println("[I2C] No devices found! Check wiring.");
+  } else {
+    Serial.printf("[I2C] Scan complete. %d device(s) found.\n", devicesFound);
+  }
 
   // --- Display init ---
   oled.init();
