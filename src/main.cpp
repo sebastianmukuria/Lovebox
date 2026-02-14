@@ -20,7 +20,7 @@
 #include <WiFiManager.h>
 #include <ArduinoJson.h>
 #include <Wire.h>
-#include "SH1106Wire.h"
+#include "SSD1306Wire.h"
 
 #include "config.h"
 
@@ -30,7 +30,7 @@
 // TODO: Add proper CA root certificate for production use.
 
 // --- Global objects ---
-SH1106Wire oled(OLED_ADDR, PIN_SDA, PIN_SCL);
+SSD1306Wire oled(OLED_ADDR, PIN_SDA, PIN_SCL);
 Servo heartServo;
 Preferences prefs;           // NVS storage (wear-leveled, unlike EEPROM)
 WiFiManager wifiManager;
@@ -222,7 +222,15 @@ void setup() {
   // --- Display init ---
   oled.init();
   oled.flipScreenVertically();
+  oled.setContrast(255);  // Max brightness
   oled.setColor(WHITE);
+
+  // --- Display test: fill entire screen white for 3 seconds ---
+  oled.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+  oled.display();
+  Serial.println("[OLED] Filled screen white - you should see a bright rectangle");
+  delay(3000);
+
   oled.setTextAlignment(TEXT_ALIGN_LEFT);
   oled.setFont(ArialMT_Plain_10);
   displayStatus("<3 LOVEBOX <3", "Connecting...");
