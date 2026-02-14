@@ -39,6 +39,7 @@ int servoPos = 90;
 int servoDir = -1;
 long lastUpdateId = 0;       // Telegram update ID - tracks which messages we've processed
 bool hasUnreadMessage = false;
+unsigned long unreadSince = 0; // When the unread message arrived (for auto-read timeout)
 String currentMessage = "";
 String currentMessageType = ""; // "text" or "photo"
 
@@ -283,12 +284,15 @@ void loop() {
     spinServo();
 
     int light = analogRead(PIN_LIGHT);
-    if (light > LIGHT_THRESHOLD) {
-      // Box was opened! Mark message as read.
+    bool boxOpened = light > LIGHT_THRESHOLD;
+    bool timedOut = (millis() - unreadSince) > 30000; // Auto-read after 30s (for testing without LDR)
+
+    if (boxOpened || timedOut) {
       hasUnreadMessage = false;
       prefs.putBool("unread", false);
       parkServo();
-      Serial.println("[Lovebox] Message read (box opened)");
+      displayStatus("<3 LOVEBOX <3");
+      Serial.printf("[Lovebox] Message read (%s)\n", boxOpened ? "box opened" : "timeout");
     }
   }
   else {
@@ -297,6 +301,7 @@ void loop() {
 
     if (gotMessage) {
       hasUnreadMessage = true;
+      unreadSince = millis();
       prefs.putBool("unread", true);
       prefs.putString("message", currentMessage);
       prefs.putString("msgType", currentMessageType);
