@@ -20,7 +20,7 @@
 #include <WiFiManager.h>
 #include <ArduinoJson.h>
 #include <Wire.h>
-#include "SSD1306Wire.h"
+#include "SH1106Wire.h"
 
 #include "config.h"
 
@@ -30,7 +30,7 @@
 // TODO: Add proper CA root certificate for production use.
 
 // --- Global objects ---
-SSD1306Wire oled(OLED_ADDR, PIN_SDA, PIN_SCL);
+SH1106Wire oled(OLED_ADDR, PIN_SDA, PIN_SCL);
 Servo heartServo;
 Preferences prefs;           // NVS storage (wear-leveled, unlike EEPROM)
 WiFiManager wifiManager;
