@@ -285,7 +285,7 @@ void loop() {
 
     int light = analogRead(PIN_LIGHT);
     bool boxOpened = light > LIGHT_THRESHOLD;
-    bool timedOut = (millis() - unreadSince) > 30000; // Auto-read after 30s (for testing without LDR)
+    bool timedOut = (millis() - unreadSince) > 10000; // Auto-read after 10s (for testing without LDR)
 
     if (boxOpened || timedOut) {
       hasUnreadMessage = false;
