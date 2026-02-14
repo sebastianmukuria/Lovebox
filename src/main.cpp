@@ -20,6 +20,7 @@
 #include <WiFiManager.h>
 #include <ArduinoJson.h>
 #include "SSD1306Wire.h"
+#include <TJpg_Decoder.h>
 
 #include "config.h"
 
@@ -78,6 +79,146 @@ void displayStatus(const String& line1, const String& line2 = "") {
   }
   oled.display();
   oled.setTextAlignment(TEXT_ALIGN_LEFT);
+}
+
+// ============================================================
+// JPEG Image Display
+// ============================================================
+// When someone sends a photo via Telegram, we:
+//   1. Get the file_id from the Telegram update
+//   2. Call getFile API to get a download path
+//   3. Download the JPEG into memory
+//   4. Decode it with TJpg_Decoder, scaling to fit 128x64
+//   5. Convert each pixel to black/white and draw on the OLED
+
+int imgOffsetX = 0;  // For centering the decoded image
+int imgOffsetY = 0;
+
+// Callback called by TJpg_Decoder for each decoded pixel block
+bool onJpgBlock(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) {
+  for (int j = 0; j < h; j++) {
+    for (int i = 0; i < w; i++) {
+      int px = x + i + imgOffsetX;
+      int py = y + j + imgOffsetY;
+      if (px >= 0 && px < SCREEN_WIDTH && py >= 0 && py < SCREEN_HEIGHT) {
+        uint16_t color = bitmap[j * w + i];  // RGB565 format
+        // Convert to grayscale: extract R/G/B, weight by human perception
+        uint8_t r = ((color >> 11) & 0x1F) << 3;
+        uint8_t g = ((color >> 5) & 0x3F) << 2;
+        uint8_t b = (color & 0x1F) << 3;
+        uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
+        // Simple threshold: > 128 = white pixel
+        if (gray > 128) {
+          oled.setPixel(px, py);
+        }
+      }
+    }
+  }
+  return true;
+}
+
+// Download a Telegram photo and display it on the OLED
+bool downloadAndDisplayImage(const String& fileId) {
+  WiFiClientSecure client;
+  client.setInsecure();
+  HTTPClient https;
+
+  // Step 1: Get the file path from Telegram
+  String url = "https://api.telegram.org/bot" + String(TELEGRAM_BOT_TOKEN)
+             + "/getFile?file_id=" + fileId;
+  if (!https.begin(client, url)) return false;
+
+  int code = https.GET();
+  if (code != HTTP_CODE_OK) {
+    Serial.printf("[Image] getFile HTTP error: %d\n", code);
+    https.end();
+    return false;
+  }
+
+  JsonDocument doc;
+  deserializeJson(doc, https.getString());
+  https.end();
+
+  String filePath = doc["result"]["file_path"].as<String>();
+  if (filePath.length() == 0) {
+    Serial.println("[Image] No file_path in response");
+    return false;
+  }
+
+  // Step 2: Download the JPEG
+  String fileUrl = "https://api.telegram.org/file/bot" + String(TELEGRAM_BOT_TOKEN)
+                 + "/" + filePath;
+  if (!https.begin(client, fileUrl)) return false;
+
+  code = https.GET();
+  if (code != HTTP_CODE_OK) {
+    Serial.printf("[Image] Download HTTP error: %d\n", code);
+    https.end();
+    return false;
+  }
+
+  int contentLen = https.getSize();
+  if (contentLen <= 0 || contentLen > 30000) {
+    Serial.printf("[Image] Bad size: %d bytes\n", contentLen);
+    https.end();
+    return false;
+  }
+
+  uint8_t* jpgBuf = (uint8_t*)malloc(contentLen);
+  if (!jpgBuf) {
+    Serial.println("[Image] malloc failed");
+    https.end();
+    return false;
+  }
+
+  WiFiClient* stream = https.getStreamPtr();
+  int bytesRead = 0;
+  unsigned long timeout = millis() + 10000;
+  while (bytesRead < contentLen && millis() < timeout) {
+    int avail = stream->available();
+    if (avail > 0) {
+      int n = stream->readBytes(jpgBuf + bytesRead, min(avail, contentLen - bytesRead));
+      bytesRead += n;
+    }
+    delay(1);
+  }
+  https.end();
+
+  if (bytesRead != contentLen) {
+    Serial.printf("[Image] Incomplete download: %d/%d\n", bytesRead, contentLen);
+    free(jpgBuf);
+    return false;
+  }
+
+  Serial.printf("[Image] Downloaded %d bytes, decoding...\n", contentLen);
+
+  // Step 3: Get image dimensions and pick a scale
+  uint16_t w = 0, h = 0;
+  TJpgDec.getJpgSize(&w, &h, jpgBuf, contentLen);
+  Serial.printf("[Image] JPEG size: %dx%d\n", w, h);
+
+  // TJpg_Decoder supports scales: 1, 2, 4, 8
+  uint8_t scale = 1;
+  if (w > 512 || h > 256) scale = 8;
+  else if (w > 256 || h > 128) scale = 4;
+  else if (w > 128 || h > 64) scale = 2;
+  TJpgDec.setJpgScale(scale);
+
+  // Center the scaled image on the 128x64 display
+  int scaledW = w / scale;
+  int scaledH = h / scale;
+  imgOffsetX = max(0, (SCREEN_WIDTH - scaledW) / 2);
+  imgOffsetY = max(0, (SCREEN_HEIGHT - scaledH) / 2);
+
+  // Step 4: Decode and draw
+  oled.clear();
+  TJpgDec.setCallback(onJpgBlock);
+  TJpgDec.drawJpg(0, 0, jpgBuf, contentLen);
+  oled.display();
+
+  free(jpgBuf);
+  Serial.println("[Image] Displayed on OLED");
+  return true;
 }
 
 // ============================================================
@@ -168,19 +309,19 @@ bool checkTelegram() {
     Serial.printf("[Telegram] Text message: %s\n", currentMessage.c_str());
   }
   else if (message.containsKey("photo")) {
-    // Telegram sends multiple sizes; grab the largest (last in array)
+    // Telegram sends multiple sizes; pick the smallest one >= 128px wide
+    // (smaller = faster download, and we're scaling to 128x64 anyway)
     JsonArray photos = message["photo"].as<JsonArray>();
-    String fileId = photos[photos.size() - 1]["file_id"].as<String>();
-
-    // We need a second API call to get the actual image file path
-    // For now, show a caption or placeholder
-    if (message.containsKey("caption")) {
-      currentMessage = message["caption"].as<String>();
-    } else {
-      currentMessage = "[Photo received]";
+    String fileId;
+    for (size_t i = 0; i < photos.size(); i++) {
+      fileId = photos[i]["file_id"].as<String>();
+      int w = photos[i]["width"].as<int>();
+      if (w >= 128) break;  // Good enough for our 128px-wide display
     }
-    currentMessageType = "text"; // Display caption as text for now
-    Serial.printf("[Telegram] Photo with caption: %s\n", currentMessage.c_str());
+
+    currentMessageType = "photo";
+    currentMessage = fileId;  // Store file_id for re-display after reboot
+    Serial.printf("[Telegram] Photo received (file_id: %.20s...)\n", fileId.c_str());
   }
   else {
     // Sticker, video, etc. -- show a generic notice
@@ -239,10 +380,11 @@ void setup() {
     currentMessage = prefs.getString("message", "");
     currentMessageType = prefs.getString("msgType", "text");
     if (currentMessage.length() > 0) {
-      if (currentMessageType == "text") {
-        displayText(currentMessage);
+      if (currentMessageType == "photo") {
+        // Re-download photo on reboot (file_id is stored)
+        downloadAndDisplayImage(currentMessage);
       } else {
-        displayBitmap(currentMessage);
+        displayText(currentMessage);
       }
     }
   } else {
@@ -306,10 +448,10 @@ void loop() {
       prefs.putString("message", currentMessage);
       prefs.putString("msgType", currentMessageType);
 
-      if (currentMessageType == "text") {
-        displayText(currentMessage);
+      if (currentMessageType == "photo") {
+        downloadAndDisplayImage(currentMessage);
       } else {
-        displayBitmap(currentMessage);
+        displayText(currentMessage);
       }
 
       heartServo.attach(PIN_SERVO);
