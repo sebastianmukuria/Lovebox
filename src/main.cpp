@@ -33,7 +33,8 @@
 SSD1306Wire oled(OLED_ADDR, PIN_SDA, PIN_SCL);
 Servo heartServo;
 Preferences prefs;           // NVS storage (wear-leveled, unlike EEPROM)
-WiFiManager wifiManager;
+// WiFiManager is NOT a global — its constructor can crash before setup() runs.
+// Declared locally inside setup() instead.
 
 // --- State ---
 int servoPos = 90;
@@ -353,6 +354,7 @@ void setup() {
   // a WiFi access point called "Lovebox-Setup". Connect to it with your
   // phone, and a captive portal opens where you pick your home WiFi.
   // After that, credentials are saved and it auto-connects on future boots.
+  WiFiManager wifiManager;
   wifiManager.setConfigPortalTimeout(180); // 3 min timeout, then retry
   if (!wifiManager.autoConnect(AP_NAME)) {
     Serial.println("[WiFi] Failed to connect - restarting");
