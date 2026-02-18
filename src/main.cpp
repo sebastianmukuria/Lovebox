@@ -390,9 +390,18 @@ void setup() {
   lastUpdateId = prefs.getLong("lastUpdateId", 0);
   hasUnreadMessage = prefs.getBool("unread", false);
 
+  // Check Telegram immediately on every boot so a /read command is processed
+  // even if the device is caught in a reboot loop.
+  displayStatus("Checking...");
+  int startupPoll = checkTelegram();
+  lastTelegramPoll = millis();
+  if (startupPoll == -1) {
+    hasUnreadMessage = false;
+    prefs.putBool("unread", false);
+    Serial.println("[Lovebox] Message dismissed via /read on startup");
+  }
+
   if (hasUnreadMessage) {
-    // Restore unread timestamp - if stored time is 0 (old firmware), treat as just received
-    // so the 24h timeout counts from now, not from epoch.
     unsigned long storedAge = prefs.getULong("unreadAge", 0);
     unreadSince = (storedAge == 0) ? millis() : (millis() - storedAge);
 
@@ -400,7 +409,6 @@ void setup() {
     currentMessageType = prefs.getString("msgType", "text");
     if (currentMessage.length() > 0) {
       if (currentMessageType == "photo") {
-        // Re-download photo on reboot (file_id is stored)
         downloadAndDisplayImage(currentMessage);
       } else {
         displayText(currentMessage);
