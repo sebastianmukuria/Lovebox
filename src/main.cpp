@@ -256,7 +256,8 @@ void parkServo() {
 // This is "long polling" -- simple, no webhooks, no server needed.
 // The ESP32 just asks "any new messages?" every POLL_INTERVAL_MS.
 
-bool checkTelegram() {
+// Returns: 1 = new message, -1 = /read command (dismiss), 0 = nothing
+int checkTelegram() {
   WiFiClientSecure client;
   client.setInsecure();
 
@@ -291,7 +292,7 @@ bool checkTelegram() {
   if (!doc["ok"].as<bool>()) return false;
 
   JsonArray results = doc["result"].as<JsonArray>();
-  if (results.size() == 0) return false;  // No new messages
+  if (results.size() == 0) return 0;  // No new messages
 
   // Process the first (newest) message
   JsonObject update = results[0];
@@ -301,11 +302,16 @@ bool checkTelegram() {
   prefs.putLong("lastUpdateId", lastUpdateId);
 
   JsonObject message = update["message"];
-  if (message.isNull()) return false;
+  if (message.isNull()) return 0;
 
   // Check what kind of message it is
   if (message.containsKey("text")) {
-    currentMessage = message["text"].as<String>();
+    String text = message["text"].as<String>();
+    if (text == "/read" || text == "/dismiss") {
+      Serial.println("[Telegram] /read command received - dismissing message");
+      return -1;
+    }
+    currentMessage = text;
     currentMessageType = "text";
     Serial.printf("[Telegram] Text message: %s\n", currentMessage.c_str());
   }
@@ -330,7 +336,7 @@ bool checkTelegram() {
     currentMessageType = "text";
   }
 
-  return true;
+  return 1;
 }
 
 // ============================================================
@@ -379,6 +385,11 @@ void setup() {
   hasUnreadMessage = prefs.getBool("unread", false);
 
   if (hasUnreadMessage) {
+    // Restore unread timestamp - if stored time is 0 (old firmware), treat as just received
+    // so the 24h timeout counts from now, not from epoch.
+    unsigned long storedAge = prefs.getULong("unreadAge", 0);
+    unreadSince = (storedAge == 0) ? millis() : (millis() - storedAge);
+
     currentMessage = prefs.getString("message", "");
     currentMessageType = prefs.getString("msgType", "text");
     if (currentMessage.length() > 0) {
@@ -421,7 +432,7 @@ void loop() {
   }
 
   if (hasUnreadMessage) {
-    // --- Unread mode: spin heart, wait for box to be opened ---
+    // --- Unread mode: spin heart, wait for box to be opened or /read command ---
     if (!heartServo.attached()) {
       heartServo.attach(PIN_SERVO);
     }
@@ -431,23 +442,32 @@ void loop() {
     Serial.printf("[LDR] value=%d threshold=%d\n", light, LIGHT_THRESHOLD);
     bool boxOpened = light > LIGHT_THRESHOLD;
 
-    if (boxOpened) {
+    // Also check for /read command from Telegram (so you can dismiss without the LDR)
+    bool dismissed = (checkTelegram() == -1);
+
+    // Auto-dismiss after 24 hours so old messages don't loop forever
+    bool timedOut = (millis() - unreadSince > UNREAD_TIMEOUT_MS);
+
+    if (boxOpened || dismissed || timedOut) {
+      if (timedOut)   Serial.println("[Lovebox] Message auto-dismissed (24h timeout)");
+      if (dismissed)  Serial.println("[Lovebox] Message dismissed via /read command");
       hasUnreadMessage = false;
       prefs.putBool("unread", false);
       parkServo();
       displayStatus("<3 LOVEBOX <3");
-      Serial.println("[Lovebox] Message read (box opened)");
+      Serial.println("[Lovebox] Message read");
     }
   }
   else {
     // --- Idle mode: check Telegram for new messages ---
     Serial.printf("[LDR] value=%d threshold=%d\n", analogRead(PIN_LIGHT), LIGHT_THRESHOLD);
-    bool gotMessage = checkTelegram();
+    int result = checkTelegram();
 
-    if (gotMessage) {
+    if (result == 1) {
       hasUnreadMessage = true;
       unreadSince = millis();
       prefs.putBool("unread", true);
+      prefs.putULong("unreadAge", 0);  // 0 = just received (age unknown after reboot)
       prefs.putString("message", currentMessage);
       prefs.putString("msgType", currentMessageType);
 
