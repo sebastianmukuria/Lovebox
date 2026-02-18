@@ -47,6 +47,7 @@ int servoDir = -1;
 long lastUpdateId = 0;       // Telegram update ID - tracks which messages we've processed
 bool hasUnreadMessage = false;
 unsigned long unreadSince = 0;
+unsigned long lastTelegramPoll = 0;
 String currentMessage = "";
 String currentMessageType = ""; // "text" or "photo"
 
@@ -447,8 +448,12 @@ void loop() {
     Serial.printf("[LDR] value=%d threshold=%d\n", light, LIGHT_THRESHOLD);
     bool boxOpened = light > LIGHT_THRESHOLD;
 
-    // Also check for /read command from Telegram (so you can dismiss without the LDR)
-    bool dismissed = (checkTelegram() == -1);
+    // Check for /read command from Telegram, but only every POLL_INTERVAL_MS
+    bool dismissed = false;
+    if (millis() - lastTelegramPoll >= POLL_INTERVAL_MS) {
+      lastTelegramPoll = millis();
+      dismissed = (checkTelegram() == -1);
+    }
 
     // Auto-dismiss after 24 hours so old messages don't loop forever
     bool timedOut = (millis() - unreadSince > UNREAD_TIMEOUT_MS);
@@ -466,6 +471,8 @@ void loop() {
   else {
     // --- Idle mode: check Telegram for new messages ---
     Serial.printf("[LDR] value=%d threshold=%d\n", analogRead(PIN_LIGHT), LIGHT_THRESHOLD);
+    if (millis() - lastTelegramPoll < POLL_INTERVAL_MS) return;
+    lastTelegramPoll = millis();
     int result = checkTelegram();
 
     if (result == 1) {
@@ -485,7 +492,5 @@ void loop() {
       heartServo.attach(PIN_SERVO);
       Serial.println("[Lovebox] New message! Spinning heart.");
     }
-
-    delay(POLL_INTERVAL_MS);
   }
 }
