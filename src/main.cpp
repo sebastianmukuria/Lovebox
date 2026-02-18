@@ -428,6 +428,7 @@ void loop() {
     spinServo();
 
     int light = analogRead(PIN_LIGHT);
+    Serial.printf("[LDR] value=%d threshold=%d\n", light, LIGHT_THRESHOLD);
     bool boxOpened = light > LIGHT_THRESHOLD;
 
     if (boxOpened) {
@@ -440,6 +441,7 @@ void loop() {
   }
   else {
     // --- Idle mode: check Telegram for new messages ---
+    Serial.printf("[LDR] value=%d threshold=%d\n", analogRead(PIN_LIGHT), LIGHT_THRESHOLD);
     bool gotMessage = checkTelegram();
 
     if (gotMessage) {
