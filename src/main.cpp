@@ -364,6 +364,26 @@ void setup() {
   oled.setFont(ArialMT_Plain_10);
   displayStatus("<3 LOVEBOX <3", "Connecting...");
 
+  // --- Factory reset via BOOT button (GPIO 0) ---
+  // If the device is stuck in a reboot loop showing an old message,
+  // hold the BOOT button (labelled "BOOT" or "IO0") while pressing RST.
+  // This clears all saved state (message, unread flag, update ID) without
+  // touching WiFi credentials, so it reconnects automatically afterwards.
+  pinMode(0, INPUT_PULLUP);
+  delay(100);
+  if (digitalRead(0) == LOW) {
+    Serial.println("[Lovebox] BOOT button held - factory reset");
+    displayStatus("Factory Reset", "Clearing NVS...");
+    Preferences p;
+    p.begin("lovebox", false);
+    p.clear();
+    p.end();
+    delay(2000);
+    displayStatus("Done!", "Release button");
+    delay(1000);
+    ESP.restart();
+  }
+
   // --- WiFiManager ---
   // On first boot (or if saved network is unavailable), the ESP32 creates
   // a WiFi access point called "Lovebox-Setup". Connect to it with your
@@ -392,17 +412,6 @@ void setup() {
   prefs.begin("lovebox", false);
   lastUpdateId = prefs.getLong("lastUpdateId", 0);
   hasUnreadMessage = prefs.getBool("unread", false);
-
-  // Check Telegram immediately on every boot so a /read command is processed
-  // even if the device is caught in a reboot loop.
-  displayStatus("Checking...");
-  int startupPoll = checkTelegram(0);  // short-poll: instant response, avoids WDT
-  lastTelegramPoll = millis();
-  if (startupPoll == -1) {
-    hasUnreadMessage = false;
-    prefs.putBool("unread", false);
-    Serial.println("[Lovebox] Message dismissed via /read on startup");
-  }
 
   if (hasUnreadMessage) {
     unsigned long storedAge = prefs.getULong("unreadAge", 0);
