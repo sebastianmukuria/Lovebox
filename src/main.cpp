@@ -24,6 +24,11 @@
 
 #include "config.h"
 
+// Firmware constants (not user-configurable, so defined here rather than config.h)
+#ifndef UNREAD_TIMEOUT_MS
+#define UNREAD_TIMEOUT_MS (24UL * 60 * 60 * 1000)  // 24 hours
+#endif
+
 // --- TLS Configuration ---
 // Using setInsecure() to skip certificate verification for now.
 // This is acceptable for a personal IoT project on a home network.
@@ -268,14 +273,14 @@ int checkTelegram() {
 
   if (!https.begin(client, apiUrl)) {
     Serial.println("[Telegram] Connection failed");
-    return false;
+    return 0;
   }
 
   int httpCode = https.GET();
   if (httpCode != HTTP_CODE_OK) {
     Serial.printf("[Telegram] HTTP error: %d\n", httpCode);
     https.end();
-    return false;
+    return 0;
   }
 
   String payload = https.getString();
@@ -286,10 +291,10 @@ int checkTelegram() {
   DeserializationError err = deserializeJson(doc, payload);
   if (err) {
     Serial.printf("[Telegram] JSON parse error: %s\n", err.c_str());
-    return false;
+    return 0;
   }
 
-  if (!doc["ok"].as<bool>()) return false;
+  if (!doc["ok"].as<bool>()) return 0;
 
   JsonArray results = doc["result"].as<JsonArray>();
   if (results.size() == 0) return 0;  // No new messages
@@ -305,7 +310,7 @@ int checkTelegram() {
   if (message.isNull()) return 0;
 
   // Check what kind of message it is
-  if (message.containsKey("text")) {
+  if (message["text"].is<String>()) {
     String text = message["text"].as<String>();
     if (text == "/read" || text == "/dismiss") {
       Serial.println("[Telegram] /read command received - dismissing message");
@@ -315,7 +320,7 @@ int checkTelegram() {
     currentMessageType = "text";
     Serial.printf("[Telegram] Text message: %s\n", currentMessage.c_str());
   }
-  else if (message.containsKey("photo")) {
+  else if (message["photo"].is<JsonArray>()) {
     // Telegram sends multiple sizes; pick the smallest one >= 128px wide
     // (smaller = faster download, and we're scaling to 128x64 anyway)
     JsonArray photos = message["photo"].as<JsonArray>();
