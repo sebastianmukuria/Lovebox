@@ -263,14 +263,17 @@ void parkServo() {
 // The ESP32 just asks "any new messages?" every POLL_INTERVAL_MS.
 
 // Returns: 1 = new message, -1 = /read command (dismiss), 0 = nothing
-int checkTelegram() {
+// telegramTimeout=0 → instant response (short poll); =5 → hold up to 5s (long poll)
+int checkTelegram(int telegramTimeout = 5) {
   WiFiClientSecure client;
   client.setInsecure();
+  client.setTimeout(8);  // 8s TCP-level timeout
 
   HTTPClient https;
+  https.setTimeout(8000);  // 8s HTTP-level timeout
   String apiUrl = "https://api.telegram.org/bot" + String(TELEGRAM_BOT_TOKEN)
                 + "/getUpdates?offset=" + String(lastUpdateId + 1)
-                + "&limit=1&timeout=5";
+                + "&limit=1&timeout=" + String(telegramTimeout);
 
   if (!https.begin(client, apiUrl)) {
     Serial.println("[Telegram] Connection failed");
@@ -393,7 +396,7 @@ void setup() {
   // Check Telegram immediately on every boot so a /read command is processed
   // even if the device is caught in a reboot loop.
   displayStatus("Checking...");
-  int startupPoll = checkTelegram();
+  int startupPoll = checkTelegram(0);  // short-poll: instant response, avoids WDT
   lastTelegramPoll = millis();
   if (startupPoll == -1) {
     hasUnreadMessage = false;
